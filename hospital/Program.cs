@@ -5,7 +5,7 @@ using Microsoft.Data.SqlClient;
 
 namespace HospitalManagement.Core
 {
-    // === 1. Моделі даних (Entities / DTOs) ===
+    // Моделі даних (Entities / DTOs)
     public class Patient
     {
         public int Id { get; set; }
@@ -34,7 +34,7 @@ namespace HospitalManagement.Core
         public string Specialization { get; set; }
     }
 
-    // === 2. Інтерфейси репозиторіїв ===
+    // Інтерфейси репозиторіїв
     public interface IPatientRepository
     {
         IEnumerable<Patient> GetAllActive();
@@ -49,7 +49,7 @@ namespace HospitalManagement.Core
         void CancelAppointment(int appointmentId, int userId);
     }
 
-    // === 3. Інтерфейс Unit of Work ===
+    // Інтерфейс Unit of Work
     public interface IUnitOfWork : IDisposable
     {
         IPatientRepository Patients { get; }
@@ -58,7 +58,7 @@ namespace HospitalManagement.Core
         void Rollback();
     }
 
-    // === 4. Реалізація PatientRepository (Використовує View та Stored Procedures) ===
+    // Реалізація PatientRepository (Використовує View та Stored Procedures)
     public class PatientRepository : IPatientRepository
     {
         private readonly SqlConnection _connection;
@@ -131,7 +131,7 @@ namespace HospitalManagement.Core
         }
     }
 
-    // === 5. Реалізація AppointmentRepository ===
+    // Реалізація AppointmentRepository
     public class AppointmentRepository : IAppointmentRepository
     {
         private readonly SqlConnection _connection;
@@ -201,7 +201,7 @@ namespace HospitalManagement.Core
         }
     }
 
-    // === 6. Реалізація Unit of Work з підтримкою транзакцій ===
+    // Реалізація Unit of Work з підтримкою транзакцій
     public class UnitOfWork : IUnitOfWork
     {
         private readonly SqlConnection _connection;
@@ -257,7 +257,7 @@ namespace HospitalManagement.Core
         }
     }
 
-    // === 7. Точка входу в програму (Тестування роботи) ===
+    // Точка входу в програму (Тестування роботи)
     class Program
     {
         static void Main(string[] args)
@@ -290,7 +290,7 @@ namespace HospitalManagement.Core
                         : maleLastNames[Random.Shared.Next(maleLastNames.Length)];
                     string gender = isFemale ? "F" : "M";
 
-                    // [1] Додаємо нового унікального пацієнта
+                    // Додавання нового унікального пацієнта
                     Console.WriteLine("[1] Додавання нового пацієнта (через Stored Procedure)...");
                     var patient = new Patient
                     {
@@ -306,7 +306,7 @@ namespace HospitalManagement.Core
                     uow.Patients.Upsert(patient, currentUserId);
                     Console.WriteLine($" -> Створено пацієнта: {patient.FirstName} {patient.LastName} (Id = {patient.Id})\n");
 
-                    // [2] Вибираємо випадкового лікаря (від 1 до 6) та випадкову вартість
+                    // Вибір випадкового лікаря (від 1 до 6) та випадкову вартість
                     // 1 - Терапевт, 2 - Кардіолог, 3 - Невропатолог, 4 - Педіатр, 5 - Травматолог, 6 - Офтальмолог
                     int randomDoctorId = Random.Shared.Next(1, 7);
                     decimal randomPrice = Random.Shared.Next(350, 750);
@@ -321,7 +321,7 @@ namespace HospitalManagement.Core
                     );
                     Console.WriteLine($" -> Прийом створено з Id = {appointmentId}\n");
 
-                    // [3] Читання списку пацієнтів через View
+                    // Читання списку пацієнтів через View
                     Console.WriteLine("[3] Список активних пацієнтів (через VIEW vw_ActivePatients):");
                     var activePatients = uow.Patients.GetAllActive();
                     foreach (var p in activePatients)
@@ -329,7 +329,7 @@ namespace HospitalManagement.Core
                         Console.WriteLine($" • [{p.Id}] {p.FirstName} {p.LastName} | Тел: {p.PhoneNumber} | Змінив: {p.LastModifiedBy}");
                     }
 
-                    // [4] Читання деталей прийомів через View (будуть різні пацієнти та різні лікарі!)
+                    // Читання деталей прийомів через View
                     Console.WriteLine("\n[4] Деталі прийомів (через VIEW vw_AppointmentDetails):");
                     var appointments = uow.Appointments.GetAppointmentDetails();
                     foreach (var a in appointments)
@@ -337,7 +337,7 @@ namespace HospitalManagement.Core
                         Console.WriteLine($" • Прийом №{a.AppointmentId}: Пацієнт: {a.PatientFullName} ➔ Лікар: {a.DoctorFullName} ({a.Specialization}) | Відділення: {a.DepartmentName} | Ціна: {a.Price} грн");
                     }
 
-                    // Фіксуємо транзакцію
+                    // Фіксація транзакції
                     uow.Commit();
                     Console.WriteLine("\n Усі операції успішно виконано та збережено в БД (Commit)! ");
                 }
